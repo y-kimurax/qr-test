@@ -1,42 +1,91 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>QRコード読み取りテスト</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>複数コード対応 QR & Barcode Reader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
-    #reader { margin: 20px auto; }
+    #reader { width: 320px; margin: 20px auto; }
     input { width: 90%; padding: 8px; font-size: 1.2em; }
-    button { padding: 10px 20px; font-size: 1.1em; }
+    button { padding: 10px 20px; font-size: 1.1em; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <h1>QRコード読み取りテスト</h1>
-  <input type="text" id="qrResult" placeholder="QRコードの結果が表示されます">
-  <div id="reader" style="width: 300px;"></div>
+  <h1>複数コード対応 QR & Barcode Reader</h1>
+  <input type="text" id="qrResult" placeholder="読み取り結果がここに表示されます" readonly />
+  <div id="reader"></div>
   <button id="startBtn">カメラ起動</button>
+  <button id="stopBtn" disabled>カメラ停止</button>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script>
     const resultInput = document.getElementById("qrResult");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
     const html5QrCode = new Html5Qrcode("reader");
 
-    document.getElementById("startBtn").addEventListener("click", () => {
+    // 対応するコードフォーマットを複数指定
+    const formatsToSupport = [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.AZTEC,
+      Html5QrcodeSupportedFormats.DATA_MATRIX,
+      Html5QrcodeSupportedFormats.PDF_417,
+      Html5QrcodeSupportedFormats.RSS_14,
+      Html5QrcodeSupportedFormats.RSS_EXPANDED,
+      Html5QrcodeSupportedFormats.CODABAR,
+      Html5QrcodeSupportedFormats.MAXICODE,
+    ];
+
+    startBtn.addEventListener("click", () => {
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      resultInput.value = "";
+
       html5QrCode.start(
-        { facingMode: "environment" }, // 背面カメラ優先
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          resultInput.value = decodedText; // 値を反映
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250,
+          formatsToSupport: formatsToSupport,
+        },
+        (decodedText, decodedResult) => {
+          resultInput.value = decodedText;
+          // 自動停止（必要なければコメントアウト）
           html5QrCode.stop().then(() => {
-            document.getElementById("reader").innerHTML = ""; // プレビュー消去
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            document.getElementById("reader").innerHTML = "";
           });
         },
         (errorMessage) => {
-          console.warn("読み取り中エラー:", errorMessage);
+          // 読み取り失敗のたびに来るのでログだけにする
+          console.debug("読み取りエラー:", errorMessage);
         }
-      );
+      ).catch((err) => {
+        console.error("カメラ起動エラー:", err);
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      });
+    });
+
+    stopBtn.addEventListener("click", () => {
+      html5QrCode.stop().then(() => {
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        document.getElementById("reader").innerHTML = "";
+      }).catch((err) => {
+        console.error("カメラ停止エラー:", err);
+      });
     });
   </script>
 
