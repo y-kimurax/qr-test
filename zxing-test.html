@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZXing-js Barcode & QR Code Reader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    video { width: 320px; height: 240px; border: 1px solid #ccc; }
+    input { width: 90%; padding: 8px; font-size: 1.2em; margin-top: 10px; }
+    button { padding: 10px 20px; font-size: 1.1em; margin: 10px 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>ZXing-js Barcode & QR Code Reader</h1>
+  <video id="video" autoplay></video>
+  <br />
+  <input type="text" id="result" placeholder="読み取り結果" readonly />
+  <br />
+  <button id="startBtn">カメラ起動</button>
+  <button id="stopBtn" disabled>カメラ停止</button>
+
+  <script type="module">
+    import { BrowserMultiFormatReader, BarcodeFormat } from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/esm/index.min.js';
+
+    const video = document.getElementById('video');
+    const resultInput = document.getElementById('result');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+
+    const formats = [
+      BarcodeFormat.QR_CODE,
+      BarcodeFormat.CODE_39,
+      BarcodeFormat.CODE_93,
+      BarcodeFormat.CODE_128,
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.ITF,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+      BarcodeFormat.AZTEC,
+      BarcodeFormat.DATA_MATRIX,
+      BarcodeFormat.PDF_417,
+      BarcodeFormat.CODABAR,
+      // 必要に応じて他のフォーマットも追加可能
+    ];
+
+    const codeReader = new BrowserMultiFormatReader();
+    let selectedDeviceId;
+
+    startBtn.addEventListener('click', async () => {
+      resultInput.value = "";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+
+      try {
+        const devices = await codeReader.listVideoInputDevices();
+        // 背面カメラがあれば選ぶ。なければ先頭のカメラ
+        selectedDeviceId = devices.find(device => device.label.toLowerCase().includes('back'))?.deviceId || devices[0].deviceId;
+
+        // decodeFromVideoDevice はカメラ映像から連続で読み取る
+        codeReader.decodeFromVideoDevice(selectedDeviceId, video, (result, err) => {
+          if (result) {
+            resultInput.value = result.getText();
+            // 読み取り成功後にカメラ停止したければ以下をアンコメント
+            // codeReader.reset();
+            // startBtn.disabled = false;
+            // stopBtn.disabled = true;
+          }
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error(err);
+          }
+        }, { possibleFormats: formats });
+      } catch (e) {
+        console.error(e);
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      codeReader.reset();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      resultInput.value = "";
+    });
+  </script>
+
+</body>
+</html>
+
