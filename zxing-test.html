@@ -20,10 +20,8 @@
   <br />
   <button id="startBtn">カメラ起動</button>
   <button id="stopBtn" disabled>カメラ停止</button>
-
-  <script type="module">
-    import { BrowserMultiFormatReader, BarcodeFormat } from 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/esm/index.min.js';
-
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
+  <script>
     const video = document.getElementById('video');
     const resultInput = document.getElementById('result');
     const startBtn = document.getElementById('startBtn');
@@ -46,7 +44,7 @@
       // 必要に応じて他のフォーマットも追加可能
     ];
 
-    const codeReader = new BrowserMultiFormatReader();
+    const codeReader = new ZXing.BrowserMultiFormatReader();
     let selectedDeviceId;
 
     startBtn.addEventListener('click', async () => {
