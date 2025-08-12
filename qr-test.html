@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>QRコード読み取りテスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    #reader { margin: 20px auto; }
+    input { width: 90%; padding: 8px; font-size: 1.2em; }
+    button { padding: 10px 20px; font-size: 1.1em; }
+  </style>
+</head>
+<body>
+
+  <h1>QRコード読み取りテスト</h1>
+  <input type="text" id="qrResult" placeholder="QRコードの結果が表示されます">
+  <div id="reader" style="width: 300px;"></div>
+  <button id="startBtn">カメラ起動</button>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script>
+    const resultInput = document.getElementById("qrResult");
+    const html5QrCode = new Html5Qrcode("reader");
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      html5QrCode.start(
+        { facingMode: "environment" }, // 背面カメラ優先
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          resultInput.value = decodedText; // 値を反映
+          html5QrCode.stop().then(() => {
+            document.getElementById("reader").innerHTML = ""; // プレビュー消去
+          });
+        },
+        (errorMessage) => {
+          console.warn("読み取り中エラー:", errorMessage);
+        }
+      );
+    });
+  </script>
+
+</body>
+</html>
+
